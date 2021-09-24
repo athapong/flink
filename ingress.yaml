@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/proxy-body-size: 50m
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-next-upstream: error timeout http_502 http_503 http_504 non_idempotent
+  name: flink-ingress
+  namespace: eve
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: flink-jobmanager-rest
+            port:
+              number: 8081
+        path: /
+        pathType: Prefix
