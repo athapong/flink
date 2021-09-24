@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flink-jobmanager-rest
+  namespace: eve
+spec:
+  ports:
+  - name: rest
+    nodePort: 30081
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: flink
+    component: jobmanager
+  sessionAffinity: None
+  type: NodePort
