@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: flink
+  name: flink-config
+  namespace: eve
+data:
+  flink-conf.yaml: "jobmanager.rpc.address: flink-jobmanager\ntaskmanager.numberOfTaskSlots:
+    2\nblob.server.port: 6124\njobmanager.rpc.port: 6123\ntaskmanager.rpc.port: 6122\nqueryable-state.proxy.ports:
+    6125\njobmanager.memory.process.size: 3500m\ntaskmanager.memory.process.size:
+    7500m\nkubernetes.namespace: eve\nparallelism.default: 2\nkubernetes.taskmanager.cpu:
+    2\nkubernetes.jobmanager.cpu: 1.0\n\n# Below configuration will be used for K8s
+    HA \nkubernetes.cluster-id: flink-cluster\nhigh-availability: org.apache.flink.kubernetes.highavailability.KubernetesHaServicesFactory\nrestart-strategy:
+    fixed-delay\nrestart-strategy.fixed-delay.attempts: 10\nhigh-availability.storageDir:
+    file:///opt/flink-stage/recovery/\nstate.savepoints.dir: file:///opt/flink-stage/savepoint/\njobmanager.archive.fs.dir:
+    file:///opt/flink-stage/history/\nweb.upload.dir: /opt/flink-stage/data/jars/\n#
+    Monitor the following directories for completed jobs\nhistoryserver.archive.fs.dir:
+    file:///opt/flink-stage/history/\n# Refresh every 10 seconds\nhistoryserver.archive.fs.refresh-interval:
+    10000\n\n#fs.s3a.access.key: \n#fs.s3a.secret.key: \n\n"
+  log4j-console.properties: |
+    # This affects logging for both user code and Flink
+    rootLogger.level = INFO
+    rootLogger.appenderRef.console.ref = ConsoleAppender
+    rootLogger.appenderRef.rolling.ref = RollingFileAppender
+
+    # Uncomment this if you want to _only_ change Flink's logging
+    #logger.flink.name = org.apache.flink
+    #logger.flink.level = INFO
+
+    # The following lines keep the log level of common libraries/connectors on
+    # log level INFO. The root logger does not override this. You have to manually
+    # change the log levels here.
+    logger.akka.name = akka
+    logger.akka.level = INFO
+    logger.kafka.name= org.apache.kafka
+    logger.kafka.level = INFO
+    logger.hadoop.name = org.apache.hadoop
+    logger.hadoop.level = INFO
+
+    # Log all infos to the console
+    appender.console.name = ConsoleAppender
+    appender.console.type = CONSOLE
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = %d{yyyy-MM-dd HH:mm:ss,SSS} %-5p %-60c %x - %m%n
+
+    # Log all infos in the given rolling file
+    appender.rolling.name = RollingFileAppender
+    appender.rolling.type = RollingFile
+    appender.rolling.append = false
+    appender.rolling.fileName = ${sys:log.file}
+    appender.rolling.filePattern = ${sys:log.file}.%i
+    appender.rolling.layout.type = PatternLayout
+    appender.rolling.layout.pattern = %d{yyyy-MM-dd HH:mm:ss,SSS} %-5p %-60c %x - %m%n
+    appender.rolling.policies.type = Policies
+    appender.rolling.policies.size.type = SizeBasedTriggeringPolicy
+    appender.rolling.policies.size.size=50MB
+    appender.rolling.strategy.type = DefaultRolloverStrategy
+    appender.rolling.strategy.max = 10
+
+    # Suppress the irrelevant (wrong) warnings from the Netty channel handler
+    logger.netty.name = org.apache.flink.shaded.akka.org.jboss.netty.channel.DefaultChannelPipeline
+    logger.netty.level = OFF
