@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-jobmanager
+  namespace: eve
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: flink
+      component: jobmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: jobmanager
+    spec:
+      containers:
+      - args:
+        - jobmanager
+        image: flink:scala_2.12-java11
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 6123
+          timeoutSeconds: 1
+        name: jobmanager
+        ports:
+        - containerPort: 6123
+          name: rpc
+          protocol: TCP
+        - containerPort: 6124
+          name: blob-server
+          protocol: TCP
+        - containerPort: 8081
+          name: webui
+          protocol: TCP
+        securityContext:
+          runAsUser: 9999
+        volumeMounts:
+        - mountPath: /opt/flink/conf
+          name: flink-config-volume
+        - mountPath: /opt/flink-stage
+          name: nfs-volume
+      serviceAccount: default
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: flink-conf.yaml
+            path: flink-conf.yaml
+          - key: log4j-console.properties
+            path: log4j-console.properties
+          name: flink-config
+        name: flink-config-volume
+      - name: nfs-volume
+        nfs:
+          path: /
+          server: 10.1.0.121
