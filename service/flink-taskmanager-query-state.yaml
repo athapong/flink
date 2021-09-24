@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flink-taskmanager-query-state
+  namespace: eve
+spec:
+  ports:
+  - name: query-state
+    nodePort: 30025
+    port: 6125
+    protocol: TCP
+    targetPort: 6125
+  selector:
+    app: flink
+    component: taskmanager
+  sessionAffinity: None
+  type: NodePort
