@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+  namespace: eve
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: flink
+      component: taskmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: taskmanager
+    spec:
+      containers:
+      - args:
+        - taskmanager
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: flink:scala_2.12-java11
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 6122
+          timeoutSeconds: 1
+        name: taskmanager
+        ports:
+        - containerPort: 6122
+          name: rpc
+          protocol: TCP
+        - containerPort: 6125
+          name: query-state
+          protocol: TCP
+        securityContext:
+          runAsUser: 9999
+        volumeMounts:
+        - mountPath: /opt/flink/conf
+          name: flink-config-volume
+        - mountPath: /opt/flink-stage
+          name: nfs-volume
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: flink-conf.yaml
+            path: flink-conf.yaml
+          - key: log4j-console.properties
+            path: log4j-console.properties
+          name: flink-config
+        name: flink-config-volume
+      - name: nfs-volume
+        nfs:
+          path: /
+          server: 10.1.0.121
