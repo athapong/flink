@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    meta.helm.sh/release-name: flink
+    meta.helm.sh/release-namespace: eve
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  name: scbeve-flink-ingress
+  namespace: eve
+spec:
+  rules:
+  - host: flink.local
+    http:
+      paths:
+      - backend:
+          serviceName: scbeve-flink-jobmanager-rest
+          servicePort: 8081
+        path: /
+status:
+  loadBalancer: {}
